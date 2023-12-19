@@ -11,6 +11,10 @@ const userSchema = new Schema({
     type: String,
     default: "",
   },
+  userEmail: {
+    type: String,
+    default: "",
+  },
   userPassword: { type: String, required: true },
   userDisplayPictureFull: {
     type: String,

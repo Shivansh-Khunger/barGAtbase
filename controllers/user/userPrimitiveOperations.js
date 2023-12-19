@@ -20,6 +20,7 @@ export async function newUser(req, res) {
     const newUser = await user.create({
       userName: req.body.userName,
       userBio: req.body.userBio,
+      userEmail: req.body.email,
       userPassword: hashedPassword,
       userDisplayPictureFull: req.imageUploadedData.url,
       userDisplayPictureMedium: req.imageUploadedData.medium.url,
