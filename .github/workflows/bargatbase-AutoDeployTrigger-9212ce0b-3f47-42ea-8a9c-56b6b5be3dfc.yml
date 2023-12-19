@@ -1,0 +1,42 @@
+name: Trigger auto deployment for bargatbase
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ main ]
+    paths:
+    - '**'
+    - '.github/workflows/bargatbase-AutoDeployTrigger-9212ce0b-3f47-42ea-8a9c-56b6b5be3dfc.yml'
+
+  # Allow manual trigger 
+  workflow_dispatch:
+      
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.BARGATBASE_AZURE_CREDENTIALS }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          appSourcePath: ${{ github.workspace }} 
+          registryUrl: docker.io
+          registryUsername: ${{ secrets.BARGATBASE_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.BARGATBASE_REGISTRY_PASSWORD }}
+          containerAppName: bargatbase
+          resourceGroup: barGAtbase_group
+          imageToBuild: shivanshkhunger/bargatbase:${{ github.sha }}
+          dockerfilePath: Dockerfile
+
+     
+
