@@ -3,6 +3,7 @@ import * as userController from "../controllers/userControllers.js";
 // middlewares
 import imageUpload from "../middlewares/imageUpload.js";
 import ifTokenIsValid from "../middlewares/tokenVerify.js";
+import isRefreshTokenValid from "../middlewares/refreshTokenCheck.js";
 import ifUserExists from "../middlewares/userExists.js";
 
 import express from "express";
@@ -19,7 +20,7 @@ router.post(
   userController.newUser
 );
 
-router.use(ifTokenIsValid, ifUserExists);
+router.use(isRefreshTokenValid,ifTokenIsValid, ifUserExists);
 
 router.delete("/del", userController.deleteUser);
 router.put("/update-userBio", userController.updateUserBio);

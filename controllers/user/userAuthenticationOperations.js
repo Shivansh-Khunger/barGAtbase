@@ -1,7 +1,13 @@
 import user from "../../model/user.js";
 
-import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+
+import {
+  createUserRefreshToken,
+  createUserAccessToken,
+} from "../../helpers/createTokens.js";
+
+import createCookie from "../../helpers/createCookie.js";
 
 export async function userExists(req, res) {
   try {
@@ -30,7 +36,7 @@ export async function userExists(req, res) {
 
     res.log.error(err, "-> an error has occured in the userExists function");
 
-    return res.status(500).json();
+    return res.status(500).json(errorPayload);
   }
 }
 
@@ -38,7 +44,7 @@ export async function userLogin(req, res) {
   try {
     // getting the triggerUser
     const triggerUser = await user.findOne(
-      { _id: req.triggerUserId },
+      { userName: req.params.userName },
       { userName: true, userPassword: true }
     );
 
@@ -50,19 +56,40 @@ export async function userLogin(req, res) {
     );
 
     if (isPasswordCorrect) {
-      const payload = { id: triggerUser.id, userName: triggerUser.userName };
-      const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-        expiresIn: process.env.JWT_EXPIRATION,
-      });
+      const userAccessTokenPayload = {
+        id: newUser.id,
+        userName: newUser.userName,
+      };
+      const userAccessToken = createUserAccessToken(userAccessTokenPayload);
+      const userAccessCookieMaxAge = 1000 * 60 * 60 * 24 * 2;
+      createCookie(
+        req,
+        res,
+        `userAccessToken`,
+        userAccessToken,
+        userAccessCookieMaxAge
+      );
+
+      // creating refresh jwt & cookie
+      const userRefreshTokenPayload = { message: "-> I am a refresh token." };
+      const userRefreshToken = createUserRefreshToken(userRefreshTokenPayload);
+      const userRefreshCookieMaxAge = 1000 * 60 * 60 * 24 * 7 * 4;
+      createCookie(
+        req,
+        res,
+        "userRefreshToken",
+        userRefreshToken,
+        userRefreshCookieMaxAge
+      );
       res.status(200).json({
         purposeCompleted: true,
         message: "user has been logged in",
-        token,
       });
     } else {
       res.status(401).json({
         purposeCompleted: false,
         message: "password is incorrect",
+        passwordInccorect: true,
       });
     }
   } catch (err) {

@@ -80,7 +80,6 @@ export async function deleteUser(req, res) {
     const triggerUser = await user.findOne(
       { _id: req.triggerUserId },
       {
-        userName: true,
         userFollowers: true,
         userFollowing: true,
         userPosts: true,
@@ -89,7 +88,7 @@ export async function deleteUser(req, res) {
 
     // deleting all comments made by the user
     const deleteComments = await comment.deleteMany({
-      commentMadeBy: triggerUser.userName,
+      commentMadeBy: req.triggerUserName,
     });
 
     // deleting all posts made by the user
@@ -99,19 +98,19 @@ export async function deleteUser(req, res) {
 
     // updating the following list for the users who followed the user
     const updateFollowingForOtherUsers = await user.updateMany(
-      { userFollowing: { $in: triggerUser.userName } },
-      { $pull: { userFollowing: triggerUser.userName } }
+      { userFollowing: { $in: req.triggerUserName } },
+      { $pull: { userFollowing: req.triggerUserName } }
     );
 
     // updating the followers list for the users wtriggerUserNamefollowed by the user
     const updateFollowersForOtherUsers = await user.updateMany(
-      { userFollowers: { $in: triggerUser.userName } },
-      { $pull: { userFollowers: triggerUser.userName } }
+      { userFollowers: { $in: req.triggerUserName } },
+      { $pull: { userFollowers: req.triggerUserName } }
     );
 
     // deleting the user itself
     const messageFromDb = await user.deleteOne({
-      userName: triggerUser.userName,
+      userName: req.triggerUserName,
     });
 
     if (messageFromDb.acknowledged == true && messageFromDb.deletedCount == 1) {

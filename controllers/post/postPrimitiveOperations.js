@@ -11,7 +11,7 @@ export async function newPost(req, res) {
     });
 
     const response = await user.updateOne(
-      { _id: req.req.triggerUserId },
+      { _id: req.triggerUserId },
       { $push: { userPosts: newPost.id } }
     );
 
@@ -38,7 +38,7 @@ export async function newPost(req, res) {
 export async function deletePost(req, res) {
   try {
     const currentPost = await imagePost.findOne(
-      { _id: req.req.triggerUserId },
+      { _id: req.params.id },
       {
         postComments: true,
       }

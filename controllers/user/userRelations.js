@@ -2,16 +2,20 @@ import user from "../../model/user.js";
 import ifUserExists from "../../helpers/userExists.js";
 
 export async function toogleFollowing(req, res) {
-  if (!ifUserExists(req.params.targetUserName)) {
-    const falseResponse = {
-      purposeCompleted: false,
-      message: `-> user: ${req.triggerUserName} was trying to follow a non existent user: ${req.params.targetUserName}.`,
-    };
-
-    return res.status(404).json(falseResponse);
-  }
-
   try {
+    if (!(await ifUserExists(req.params.targetUserName))) {
+      const falseResponse = {
+        purposeCompleted: false,
+        message: `-> user: ${req.triggerUserName} was trying to follow a non existent user: ${req.params.targetUserName}.`,
+      };
+
+      res.log.warn(
+        falseResponse,
+        `-> user: ${req.triggerUserName} was trying to follow a non existent user: ${req.params.targetUserName}.`
+      );
+      return res.status(404).json(falseResponse);
+    }
+
     const addingToFollowingResponse = await user.updateOne(
       {
         userName: req.triggerUserName,
@@ -41,7 +45,7 @@ export async function toogleFollowing(req, res) {
         {
           userName: req.params.targetUserName,
         },
-        { $pull: { userFollowing: req.triggerUserName } }
+        { $pull: { userFollowers: req.triggerUserName } }
       );
 
       if (
@@ -50,16 +54,23 @@ export async function toogleFollowing(req, res) {
       ) {
         res.status(200).json({
           purposeCompleted: true,
-          message: `-> the user: ${req.triggerUserName} is now not following the user: ${req.params.otherUserName}`,
+          message: `-> the user: ${req.triggerUserName} is now not following the user: ${req.params.targetUserName}`,
           isFollowing: false,
         });
       }
     } else {
-      res.status(200).json({
+      const warningPayload = {
         purposeCompleted: true,
-        message: `-> the user: ${req.triggerUserName} is now following the user: ${req.params.otherUserName}`,
+        message: `-> the user: ${req.triggerUserName} is now following the user: ${req.params.targetUserName}`,
         isFollwing: true,
-      });
+      };
+
+      res.log.warn(
+        warningPayload,
+        `-> the user: ${req.triggerUserName} is now following the user: ${req.params.targetUserName}`
+      );
+
+      res.status(200).json(warningPayload);
     }
   } catch (err) {
     const errorPayload = {

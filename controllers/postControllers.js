@@ -10,7 +10,7 @@ export * from "./post/commentManagement.js";
 
 export async function getPost(req, res) {
   try {
-    const currentPost = await imagePost.findById(req.triggerUserId);
+    const currentPost = await imagePost.findById(req.params.id);
 
     const responsePayload = {
       puproseCompleted: true,

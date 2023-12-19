@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import handleTokenErrors from "../helpers/handleTokenErrors.js";
+import { logger } from "../logger.js";
 
 function ifTokenIsValid(req, res, next) {
   try {
@@ -12,12 +13,11 @@ function ifTokenIsValid(req, res, next) {
       req.triggerUserId = accessTokenDecode.id;
       req.triggerUserName = accessTokenDecode.userName;
 
-      logger.info("-> the token sent has been successfully verified.");
+      logger.info("-> the accessToken sent has been successfully verified.");
       next();
     }
   } catch (err) {
     handleTokenErrors(req, res, err, `accessToken`);
   }
 }
-
 export default ifTokenIsValid;

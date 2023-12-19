@@ -14,7 +14,7 @@ export async function refreshAccessToken(req, res) {
       process.env.JWT_REFRESH_SECRET_KEY
     );
 
-    if (refreshTokenDecode) {
+    try {
       const accessTokenDecode = jwt.verify(
         req.signedCookies.userAccessToken,
         process.env.JWT_ACCESS_SECRET_KEY,
@@ -22,7 +22,6 @@ export async function refreshAccessToken(req, res) {
           ignoreExpiration: true,
         }
       );
-
       const userAccessTokenPayload = {
         id: accessTokenDecode.id,
         userName: accessTokenDecode.userName,
@@ -47,31 +46,12 @@ export async function refreshAccessToken(req, res) {
         "-> response payload for refreshAccessToken function"
       );
       res.status(200).json(responsePayload);
-    } else {
-      const responsePayload = {
-        purposeCompleted: false,
-        message: `-> refresh token is either not valid or expired.`,
-      };
-
-      res.log.info(
-        responsePayload,
-        "-> response payload for refreshAccessToken function"
-      );
-      res.status(403).json(responsePayload);
+    } catch (err) {
+      handleTokenErrors(req, res, err, `accessToken`);
     }
   } catch (err) {
     //sending a response
-    const errorPayload = {
-      purposeCompleted: false,
-      message: `-> an error has occured in creating a new the access token.`,
-      accessTokenRefreshed: false,
-    };
-
-    res.log.error(
-      err,
-      "-> an error has occured in creating a new access token."
-    );
-    res.status(500).json(errorPayload);
+    handleTokenErrors(req, res, err, `refreshToken`);
   }
 }
 

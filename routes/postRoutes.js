@@ -2,6 +2,7 @@ import * as postController from "../controllers/postControllers.js";
 
 import imageUpload from "../middlewares/imageUpload.js";
 import ifTokenIsValid from "../middlewares/tokenVerify.js";
+import isRefreshTokenValid from "../middlewares/refreshTokenCheck.js";
 import ifUserExists from "../middlewares/userExists.js";
 
 import express from "express";
@@ -11,14 +12,14 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const router = express.Router();
 
+router.use(isRefreshTokenValid, ifTokenIsValid, ifUserExists);
+
 router.post(
   "/new",
   upload.single("picture"),
   imageUpload,
   postController.newPost
 );
-
-router.use(ifTokenIsValid, ifUserExists);
 
 router.delete("/:id/del", postController.deletePost);
 router.get("/all", postController.getAllPosts);
@@ -27,7 +28,7 @@ router.put("/:id/toggle-like", postController.toggleLikeToPost);
 router.put("/:id/update-caption", postController.updatePostCaption);
 router.put(
   "/:id/update-picture",
-  upload.single("updatedValue"),
+  upload.single("picture"),
   imageUpload,
   postController.updatePostImage
 );

@@ -10,7 +10,7 @@ export async function newComment(req, res) {
 
     const response = await imagePost.updateOne(
       {
-        _id: req.triggerUserId,
+        _id: req.params.id,
       },
       {
         $set: { postLastUpdatedDate: Date.now() },
@@ -19,11 +19,17 @@ export async function newComment(req, res) {
     );
 
     if (response.modifiedCount == 1) {
-      res.status(201).json({
+      const responsePayload = {
         purposeCompleted: true,
-        messsage: `-> ${req.triggerUserName} has posted a comment to the post with id:${req.triggerUserId}`,
+        messsage: `-> user: ${req.triggerUserName} has posted a comment to the post with id:${req.params.id}`,
         data: newComment,
-      });
+      };
+
+      res.log.info(
+        responsePayload,
+        "-> response payload for newComment function."
+      );
+      res.status(201).json(responsePayload);
     }
   } catch (err) {
     const errorPayload = {
@@ -42,19 +48,21 @@ export async function deleteComment(req, res) {
   try {
     const response = await imagePost.updateOne(
       {
-        postComments: { $in: req.triggerUserId },
+        postComments: { $in: req.params.id },
       },
       {
-        $pull: { postComments: req.triggerUserId },
+        $pull: { postComments: req.params.id },
       }
     );
 
-    const deletedComment = await comment.deleteOne({ _id: req.triggerUserId });
+    const deletedComment = await comment.deleteOne({ _id: req.params.id });
 
     if (response.modifiedCount == 1 && deletedComment.deletedCount == 1) {
       res.status(200).json({
         purposeCompleted: true,
-        messsage: `-> ${req.triggerUserName} has deleted a comment to the post with id:${req.triggerUserId}`,
+        messsage: `-> ${
+          req.triggerUserName
+        } has deleted a comment to the post with id:${(req.params.id)}`,
         data: newComment,
       });
     }
@@ -63,7 +71,7 @@ export async function deleteComment(req, res) {
 
     res.status(500).json({
       purposeCompleted: false,
-      message: `-> comment by user: ${req.triggerUserName} could not be deleted to the post with id:${req.triggerUserId}.`,
+      message: `-> comment by user: ${req.triggerUserName} could not be deleted to the post with id:${req.params.id}.`,
     });
   }
 }
@@ -71,7 +79,7 @@ export async function deleteComment(req, res) {
 export async function toggleLikeToComment(req, res) {
   try {
     const responseAdding = await comment.updateOne(
-      { _id: req.triggerUserId },
+      { _id: req.params.id },
       {
         $addToSet: { commentLikes: req.triggerUserName },
       }
@@ -81,7 +89,7 @@ export async function toggleLikeToComment(req, res) {
       const responseRemoving = await comment.updateOne(
         {
           $and: [
-            { _id: req.triggerUserId },
+            { _id: req.params.id },
             {
               commentLikes: { $in: req.triggerUserName },
             },
@@ -99,14 +107,14 @@ export async function toggleLikeToComment(req, res) {
     } else {
       return res.status(200).json({
         purposeCompleted: true,
-        message: `-> ${req.triggerUserName} has Liked the comment with id:${req.triggerUserId}.`,
+        message: `-> ${req.triggerUserName} has Liked the comment with id:${req.params.id}.`,
         isUserLikingComment: false,
       });
     }
   } catch (err) {
     const errorPayload = {
       purposeCompleted: false,
-      message: `-> like by user: ${req.triggerUserName} could not be toggled to the comment with id:${req.triggerUserId}.`,
+      message: `-> like by user: ${req.triggerUserName} could not be toggled to the comment with id:${req.params.id}.`,
       errorOccured: true,
     };
 

@@ -3,7 +3,7 @@ import imagePost from "../../model/imagePost.js";
 export async function toggleLikeToPost(req, res) {
   try {
     const responseAdding = await imagePost.updateOne(
-      { _id: req.triggerUserId },
+      { _id: req.params.id },
       { $addToSet: { postLikes: req.triggerUserName } }
     );
 
@@ -11,7 +11,7 @@ export async function toggleLikeToPost(req, res) {
       const responseRemoving = await imagePost.updateOne(
         {
           $and: [
-            { _id: req.triggerUserId },
+            { _id: req.params.id },
             {
               postLikes: { $in: req.triggerUserName },
             },
@@ -50,7 +50,7 @@ export async function toggleLikeToPost(req, res) {
 export async function updatePostCaption(req, res) {
   try {
     const response = await imagePost.updateOne(
-      { _id: req.triggerUserId },
+      { _id: req.params.id },
       {
         $set: {
           postCaption: req.body.updatedValue,
@@ -64,10 +64,13 @@ export async function updatePostCaption(req, res) {
       response.modifiedCount == 1 &&
       response.matchedCount == 1
     ) {
-      res.status(200).json({
+      const responsePayload = {
         purposeCompleted: true,
         message: `-> postCaption successfully updated.`,
-      });
+      };
+
+      res.log.info(responsePayload,"-> response payload for updateCaption function.")
+      res.status(200).json(responsePayload);
     }
   } catch (err) {
     const errorPayload = {
@@ -85,7 +88,7 @@ export async function updatePostCaption(req, res) {
 export async function updatePostImage(req, res) {
   try {
     const response = await imagePost.updateOne(
-      { _id: req.triggerUserId },
+      { _id: req.params.id },
       {
         $set: {
           postImageFull: req.imageUploadedData.url,

@@ -1,4 +1,7 @@
 import user from "../../model/user.js";
+import createCookie from "../../helpers/createCookie.js";
+import { createUserAccessToken } from "../../helpers/createTokens.js";
+import comment from "../../model/comment.js";
 
 export async function updateUserBio(req, res) {
   try {
@@ -46,6 +49,28 @@ export async function updateUserName(req, res) {
       response.modifiedCount == 1 &&
       response.matchedCount == 1
     ) {
+      comment.updateMany(
+        {
+          commentMadeBy: req.triggerUserName,
+        },
+        { $set: { commentMadeBy: req.body.updatedUserName } }
+      );
+
+      // creating a new cookie for updated name
+      const userAccessTokenPayload = {
+        id: req.triggerUserId,
+        userName: req.body.updatedUserName,
+      };
+      const userAccessToken = createUserAccessToken(userAccessTokenPayload);
+      const userAccessCookieMaxAge = 1000 * 60 * 60 * 24 * 2;
+      createCookie(
+        req,
+        res,
+        `userAccessToken`,
+        userAccessToken,
+        userAccessCookieMaxAge
+      );
+
       return res.status(200).json({
         purposeCompleted: true,
         message: `-> userName successfully updated.`,
