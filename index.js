@@ -44,18 +44,32 @@ await connectingToDb();
 app.use(cookieParser(process.env.COOKIE_SECRET_KEY));
 
 // creating an HTTPS server
-if (process.env.NODE_ENV == "Dev") {
-  const options = {
-    key: fs.readFileSync("./ssl/cert.key"),
-    cert: fs.readFileSync("./ssl/cert.crt"),
-  };
-  https.createServer(options, app).listen(PORT, () => {
-    logger.info(`-> now listening at https://localhost:${PORT}/`);
-  });
-} else if (process.env.NODE_ENV == "Prod") {
-  app.listen(PORT, () => {
-    logger.info(`-> now listening at http://localhost:${PORT}/`);
-  });
+switch (process.env.NODE_ENV) {
+  case "Dev-Local":
+    const options = {
+      key: fs.readFileSync("./ssl/cert.key"),
+      cert: fs.readFileSync("./ssl/cert.crt"),
+    };
+    https.createServer(options, app).listen(PORT, () => {
+      logger.info(`-> now listening at https://localhost:${PORT}/`);
+    });
+    break;
+  case "Dev-Cloud":
+    app.listen(PORT, () => {
+      logger.info(`-> now listening at http://localhost:${PORT}/`);
+    });
+    break;
+  case "Prod":
+    // setting headers
+    app.use(setHeaders);
+
+    app.listen(PORT, () => {
+      logger.info(`-> now listening at http://localhost:${PORT}/`);
+    });
+    break;
+  default:
+    console.error("Invalid NODE_ENV value");
+    break;
 }
 
 // base URL
