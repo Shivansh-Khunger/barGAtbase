@@ -19,8 +19,9 @@ router.post(
   imageUpload,
   userController.newUser
 );
+router.post("/newNoImg", userController.newUserNoImg);
 
-router.use(isRefreshTokenValid,ifTokenIsValid, ifUserExists);
+router.use(isRefreshTokenValid, ifTokenIsValid, ifUserExists);
 
 router.delete("/del", userController.deleteUser);
 router.put("/update-userBio", userController.updateUserBio);
