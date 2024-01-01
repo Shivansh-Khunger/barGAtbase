@@ -55,20 +55,13 @@ switch (process.env.NODE_ENV) {
     });
     break;
   case "Dev-Cloud":
-    app.listen(PORT, () => {
-      logger.info(`-> now listening at http://localhost:${PORT}/`);
-    });
-    break;
   case "Prod":
-    // setting headers
-    app.use(setHeaders);
-
     app.listen(PORT, () => {
       logger.info(`-> now listening at http://localhost:${PORT}/`);
     });
     break;
   default:
-    console.error("Invalid NODE_ENV value");
+    logger.error("Invalid NODE_ENV value");
     break;
 }
 

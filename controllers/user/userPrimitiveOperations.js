@@ -76,6 +76,71 @@ export async function newUser(req, res) {
   }
 }
 
+export async function newUserNoImg(req, res) {
+  try {
+    const unhashedPassword = req.body.password;
+    const hashedPassword = await hashPassword(unhashedPassword);
+
+    // setting & creating the user in database
+    const newUser = await user.create({
+      userName: req.body.userName,
+      userBio: req.body.userBio,
+      userEmail: req.body.email,
+      userPassword: hashedPassword,
+      userDisplayPictureFull: req.body.imgUrl,
+      userDisplayPictureMedium: req.body.imgUrl,
+      userDisplayPictureThumb: req.body.imgUrl,
+    });
+
+    // creating access jwt & cookie
+    const userAccessTokenPayload = {
+      id: newUser.id,
+      userName: newUser.userName,
+    };
+    const userAccessToken = createUserAccessToken(userAccessTokenPayload);
+    const userAccessCookieMaxAge = 1000 * 60 * 60 * 24 * 2;
+    createCookie(
+      req,
+      res,
+      `userAccessToken`,
+      userAccessToken,
+      userAccessCookieMaxAge
+    );
+
+    // creating refresh jwt & cookie
+    const userRefreshTokenPayload = { message: "-> I am a refresh token." };
+    const userRefreshToken = createUserRefreshToken(userRefreshTokenPayload);
+    const userRefreshCookieMaxAge = 1000 * 60 * 60 * 24 * 7 * 4;
+    createCookie(
+      req,
+      res,
+      "userRefreshToken",
+      userRefreshToken,
+      userRefreshCookieMaxAge
+    );
+
+    // sending a response
+    const responsePayload = {
+      purposeCompleted: true,
+      message: `-> User with userName: ${req.body.userName} created.`,
+      data: { newUser },
+    };
+
+    res.log.info(responsePayload, "-> response payload for newUser function");
+    res.status(201).json(responsePayload);
+  } catch (err) {
+    //sending a response
+    const errorPayload = {
+      purposeCompleted: false,
+      message: `-> an error has occured in creating a new user.`,
+      errorOccured: true,
+    };
+
+    res.log.error(err, "-> an error has occured in the newUser function");
+    res.status(500).json(errorPayload);
+  }
+}
+
 export async function deleteUser(req, res) {
   try {
     const triggerUser = await user.findOne(

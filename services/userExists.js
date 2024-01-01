@@ -1,6 +1,8 @@
 import user from "../model/user.js";
+import { logger } from "../logger.js";
 
 export async function ifUserExists(req, res) {
+  logger.info(req.body.tempValue);
   try {
     const ifUserExists = await user.findOne(
       { userName: req.body.tempValue },
